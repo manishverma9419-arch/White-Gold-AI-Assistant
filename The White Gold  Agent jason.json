@@ -1,0 +1,410 @@
+{
+  "name": "The White Gold  Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -272,
+        -96
+      ],
+      "id": "76a2110c-c9be-4fa2-b2e7-ae2ab8b011f4",
+      "name": "When chat message received",
+      "webhookId": "974c6d3b-c62c-4cc1-907a-78250a778e3d"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a customer support agent for The White Gold \nFollow the rules below:\n\n- Use \"Get Inventory\" to fetch the latest inventory data from the Inventory sheet.\n\n- Do not show the stock of the food items or let the customer know how many are left. If the customer is asking more than the current stock, just politely suggest them some other dish.\n\n- When customer ask for the menu, just show the customer Food item and price in form of a table. (Do not show the stock to the customer).\n\n- Use \"Add Orders\" tool to add orders in the Orders sheet based on customer's request. You need to update only Name, Item, and Quantity fields based on customer's message. Ask the customer politely if any field is missing in customer's message. No additional data required from customer.\n\n- If customer orders some item that is out of stock or more than the current stock, then please let the customer know in a very polite way, and suggest Chef's special curd , milk  item instead.\n\n- Once order is confirmed, please ask the customer to make the payment at momsmagicblr@upi to place the order.\n\n- Once order is added, please use \"Update Inventory\" tool to reduce the stock for the ordered food item. Example: If customer has ordered 2 ghee then you should deduct 2 from the  ghee stock."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "91aa7364-1142-44fe-9c9d-890a31f2aa3c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        160
+      ],
+      "id": "563f6d26-2d2f-4d83-896c-bf7109812b3f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        176
+      ],
+      "id": "1a0a95a3-ec85-4440-a029-d4eaa76c778f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prod-1-data.ke.pinecone.io/assistant/chat/thewhitegold1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": ""
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=\n{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $fromAI('query', 'User question about milk company policies', 'string') }}\"\n    }\n  ],\n  \"stream\": false\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        64
+      ],
+      "id": "14f65786-fb1f-43a0-96fe-5173166addec",
+      "name": "Get Policies from RAG"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg",
+          "mode": "list",
+          "cachedResultName": "the white gold dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1294214230,
+          "mode": "list",
+          "cachedResultName": "order",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit#gid=1294214230"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+            "items": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('items__using_to_match_', ``, 'string') }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}",
+            "total price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('total_price', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "items"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "items",
+              "displayName": "items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total price",
+              "displayName": "total price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        160
+      ],
+      "id": "05a594b8-34e0-4378-8cee-41805ca7e15a",
+      "name": "add order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3KssGjXRrnW4MS23",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg",
+          "mode": "list",
+          "cachedResultName": "the white gold dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "stock": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('stock', ``, 'string') }}",
+            "Item": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Item__using_to_match_', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Item"
+          ],
+          "schema": [
+            {
+              "id": "Item",
+              "displayName": "Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "stock",
+              "displayName": "stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        160
+      ],
+      "id": "03eff97b-56fd-4a91-906b-394b4c734bfe",
+      "name": "update inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3KssGjXRrnW4MS23",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg",
+          "mode": "list",
+          "cachedResultName": "the white gold dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BfiscOZOUdC8yeiBDqIKvBSbr0wcxitFL1tZMG5ejKg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        144
+      ],
+      "id": "d3daabf3-c3b0-4170-8c34-69b818dc7f13",
+      "name": "get inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3KssGjXRrnW4MS23",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Policies from RAG": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add order": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a6119893-3362-4581-aee2-5a80ae4c8b94",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4bd6e3dea10331a1ffc677530b08057e937417875a46ac8ae61948bd12140c24"
+  },
+  "nodeGroups": [],
+  "id": "qHkeX08zfVp5X0Jy",
+  "tags": []
+}
